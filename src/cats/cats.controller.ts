@@ -1,18 +1,35 @@
-import {Body, Controller, Get, Header, HttpCode, Param, Post, Query, Redirect, Req} from "@nestjs/common";
+import {
+    Body,
+    Controller,
+    Get,
+    Header,
+    HttpCode,
+    Param,
+    Post,
+    Query,
+    Redirect,
+    Req,
+    UsePipes,
+    ValidationPipe
+} from "@nestjs/common";
 import {Observable, of} from "rxjs";
 import {CatDTO} from "./DTO/CatDTO";
+import {CatsService} from "./cats.service";
+import {Cat} from "./interfaces/Cat";
 
 @Controller('cats')
 export class CatsController {
 
-    @Get()
-    findAll(@Req() request: Request): string {
-        return 'This action returns all cats';
-    }
+    constructor(private catsService: CatsService) {}
 
     @Get()
-    findAllAsync(): Observable<any[]> {
-        return of([]);
+    findAll(@Req() request: Request) {
+        return this.catsService.findAll();
+    }
+
+    @Get('findAllAsync')
+    async findAllAsync(): Promise<Cat[]> {
+        return this.catsService.findAll();
     }
 
     @Get('redirectToNestJS')
@@ -35,7 +52,12 @@ export class CatsController {
     }
 
     @Post('createAsync')
+    @UsePipes(new ValidationPipe({
+        transform: true,
+        whitelist: true,
+    }))
     async createAsync(@Body() catDTO: CatDTO) {
-        return `This action adds a new cat: ${catDTO.name} ${catDTO.age} ${catDTO.breed}`
+        this.catsService.create(catDTO);
+        return `This action adds a new cat: ${JSON.stringify(catDTO)}`;
     }
 }
